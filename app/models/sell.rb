@@ -1,8 +1,18 @@
 class Sell < ApplicationRecord
   include Fae::BaseModelConcern
+  enum status: { finalizada: 0, cancelada: 1 }
+  validates :client, presence: true
 
-  # validates client, presence: true
-  enum status: { finished: 0, canceled: 1 }
+  belongs_to :discount
+  belongs_to :client
+
+  has_many :sell_products
+  has_many :products, through: :sell_products
+
+  has_many :sell_services
+  has_many :services, through: :sell_services
+
+  before_save :set_total
 
   def fae_display_field
     id
@@ -12,11 +22,16 @@ class Sell < ApplicationRecord
     order(:id)
   end
 
-  belongs_to :discount
-  belongs_to :client, required: true
-  has_many :sell_products
-  has_many :products, through: :sell_products
+  private
 
-  has_many :sell_services
-  has_many :services, through: :sell_services
+  def set_total
+    total = 0
+    products.each { |p| total += p.price }
+    services.each { |s| total += s.price }
+
+    total -= discount.value if discount.present?
+
+    total = total >= 0 ? total : 0
+    self.total = total
+  end
 end
