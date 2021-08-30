@@ -26,14 +26,12 @@ class Sell < ApplicationRecord
 
   def set_total
     total = 0
-    self.products.each {|p| total += p.price }
-    self.services.each {|s| total += s.price }
+    products.each { |p| total += p.price }
+    services.each { |s| total += s.price }
 
-    if self.discount.present?
-      total = total - self.discount.value
-    end
+    total -= discount.value if discount.present?
 
-    total = (total >= 0)? total : 0
+    total = total >= 0 ? total : 0
     self.total = total
   end
 end
