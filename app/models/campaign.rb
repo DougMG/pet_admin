@@ -7,7 +7,16 @@ class Campaign < ApplicationRecord
   validates :title, presence: true
   validates :body, presence: true
 
+  after_save :schedule_emails
+
   def fae_display_field
     title
+  end
+
+  def schedule_emails
+    Client.find_each do |client|
+      CampaignClient.create(campaign: self, client: client)
+      CampaignJob.perform_later client, title, body
+    end
   end
 end
